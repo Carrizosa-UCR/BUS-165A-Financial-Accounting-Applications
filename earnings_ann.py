@@ -3,8 +3,7 @@
 import streamlit as st
 from openai import OpenAI
 
-client = OpenAI(api_key=st.secrets["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"])
-
+client = OpenAI(api_key="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")
 
 st.set_page_config(page_title="Earnings Announcement Chatbot", layout="wide")
 st.title("📊 Earnings Announcement Discussion Bot")
