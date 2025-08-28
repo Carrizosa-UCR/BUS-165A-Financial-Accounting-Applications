@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 from google import genai
-import math
 
 # --- Load API key from environment variable ---
 api_key = os.getenv("GOOGLE_API_KEY")
@@ -12,11 +11,11 @@ if not api_key:
 # Initialize Gemini client
 client = genai.Client()
 
-st.title("📊 NVIDIA Earnings Announcement Classroom Bot (Gemini)")
+st.title("📊 NVIDIA Q2 2025 Earnings Classroom Bot (Gemini)")
 
-# --- NVIDIA Q2 2025 context ---
-nvidia_context = """
-NVIDIA Q2 2025 Financial Highlights:
+# --- NVIDIA Q2 2025 Financial Highlights ---
+financial_highlights = """
+📌 NVIDIA Q2 2025 Financial Highlights:
 - Revenue: $46.7B, up 56% YoY
 - Net Income: $26.4B
 - EPS: GAAP $1.08, Non-GAAP $1.05
@@ -31,12 +30,18 @@ NVIDIA Q2 2025 Financial Highlights:
 - CEO Jensen Huang emphasized AI infrastructure growth and Blackwell platform potential
 """
 
-# --- Store student responses ---
+st.subheader("💼 NVIDIA Q2 2025 Financial Highlights")
+st.text(financial_highlights)
+
+# --- Ask a basic question ---
+st.subheader("💬 Question for Students")
+st.write("Based on the financial highlights, what do you think was the main driver of NVIDIA's Q2 2025 revenue growth?")
+
+# Store student responses
 if "responses" not in st.session_state:
     st.session_state.responses = []
 
-# --- Student input ---
-student_input = st.text_area("💬 Enter your response:")
+student_input = st.text_area("Enter your response:")
 
 if st.button("Submit Response"):
     if student_input.strip():
@@ -51,71 +56,39 @@ if st.session_state.responses:
     for i, resp in enumerate(st.session_state.responses, 1):
         st.write(f"{i}. {resp}")
 
-# --- Summarize & feedback ---
-if st.button("Summarize & Generate Feedback + Follow-ups"):
+# --- Summarize and provide follow-up question ---
+if st.button("Summarize & Provide Follow-Up"):
     responses = st.session_state.responses
     if not responses:
         st.warning("No responses yet!")
     else:
-        batch_size = 20
-        num_batches = math.ceil(len(responses) / batch_size)
-        batch_summaries = []
+        batch_text = "\n".join([f"{i+1}. {r}" for i, r in enumerate(responses)])
 
-        for i in range(num_batches):
-            batch_responses = responses[i*batch_size:(i+1)*batch_size]
-            batch_text = "\n".join([f"{j+1}. {r}" for j, r in enumerate(batch_responses)])
+        # Prepare prompt for Gemini
+        prompt = f"""
+You are a teaching assistant.
+Use the following NVIDIA Q2 2025 financial highlights as context:
 
-            prompt = f"""
-You are a teaching assistant helping an accounting professor.
-Use the following NVIDIA Q2 2025 earnings context to help your analysis:
+{financial_highlights}
 
-{nvidia_context}
-
-Here are student responses from a batch:
+Here are student responses:
 
 {batch_text}
 
 Tasks:
-1. Give brief (1-2 sentence) personalized feedback for each student response, numbered.
-2. Summarize main themes in this batch.
-Keep the response concise.
-"""
-
-            try:
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt
-                )
-                batch_summaries.append(response.text)
-
-            except Exception as e:
-                st.error(f"Error in batch {i+1}: {e}")
-                continue
-
-        # --- Combine batch summaries ---
-        combined_summaries = "\n".join(batch_summaries)
-        final_prompt = f"""
-You are a teaching assistant.
-Use the NVIDIA Q2 2025 earnings context provided above.
-Here are summaries from all student batches:
-
-{combined_summaries}
-
-Tasks:
-1. Combine these into a final class-level summary.
-2. Suggest 2-3 thoughtful follow-up discussion questions.
-Keep concise.
+1. Provide a concise summary of the student responses.
+2. Suggest one thoughtful follow-up discussion question for the class.
 """
 
         try:
-            final_response = client.models.generate_content(
+            response = client.models.generate_content(
                 model="gemini-2.5-flash",
-                contents=final_prompt
+                contents=prompt
             )
 
-            st.subheader("📖 Final Class Summary & Follow-Ups")
-            st.write(final_response.text)
+            st.subheader("📖 Summary & Follow-Up Question")
+            st.write(response.text)
 
         except Exception as e:
-            st.error(f"Error generating final summary: {e}")
+            st.error(f"Error generating summary: {e}")
 
