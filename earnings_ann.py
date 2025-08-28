@@ -84,8 +84,6 @@ Keep concise.
             final_response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=final_prompt,
-                temperature=0.7,
-                max_output_tokens=400
             )
 
             st.subheader("📖 Final Class Summary & Follow-Ups")
