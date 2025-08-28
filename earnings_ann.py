@@ -1,11 +1,15 @@
 import streamlit as st
 import google.genai as genai
+import os
 import math
 
-# --- Configure your Gemini API key ---
-genai.configure(api_key="AIzaSyBTUAoKIXwrMA5Zk7muNECVNgil81zOlpg")  # Replace with your actual key
+# --- Load API key from environment variable ---
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    st.error("❌ GOOGLE_API_KEY environment variable not set.")
+    st.stop()
 
-# Initialize the Gemini text generation model
+# The SDK automatically reads the key from the environment
 model = genai.TextGenerationModel.from_pretrained("gemini-2.5")
 
 st.title("📊 Earnings Announcement Classroom Bot (Gemini)")
@@ -96,4 +100,3 @@ Keep concise.
 
         except Exception as e:
             st.error(f"Error generating final summary: {e}")
-
