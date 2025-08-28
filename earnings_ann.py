@@ -3,7 +3,7 @@ import streamlit as st
 from openai import OpenAI
 import math
 
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="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")
 
 st.title("📊 Earnings Announcement Discussion Bot")
 
