@@ -1,5 +1,5 @@
 import streamlit as st
-import google.genai as genai
+from google import genai
 import os
 import math
 
@@ -9,8 +9,9 @@ if not api_key:
     st.error("❌ GOOGLE_API_KEY environment variable not set.")
     st.stop()
 
-# The SDK automatically reads the key from the environment
-model = genai.TextGenerationModel.from_pretrained("gemini-2.5")
+# Initialize the GenAI client
+client = genai.Client()
+
 
 st.title("📊 Earnings Announcement Classroom Bot (Gemini)")
 
