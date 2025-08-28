@@ -5,84 +5,60 @@ from openai import OpenAI
 
 client = OpenAI(api_key="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")
 
-st.set_page_config(page_title="Earnings Announcement Chatbot", layout="wide")
 st.title("📊 Earnings Announcement Discussion Bot")
 
-# Session state for storing responses
-if "student_responses" not in st.session_state:
-    st.session_state.student_responses = []
-if "phase" not in st.session_state:
-    st.session_state.phase = "question"  # phases: question → collect → summary → followup
+# Storage for student responses
+if "responses" not in st.session_state:
+    st.session_state.responses = []
 
+# Student input box
+student_input = st.text_area("💬 Enter your response:", key="student_input")
 
-# === Step 1: Present Question ===
-if st.session_state.phase == "question":
-    st.write("### Initial Question for Students")
-    st.info("How might an earnings announcement affect a company’s stock price and investor perception?")
+if st.button("Submit Response"):
+    if student_input.strip():
+        st.session_state.responses.append(student_input.strip())
+        st.success("✅ Response submitted!")
+    else:
+        st.warning("Please enter a response before submitting.")
 
-    if st.button("Start Collecting Responses"):
-        st.session_state.phase = "collect"
-        st.rerun()
+# Show collected responses
+if st.session_state.responses:
+    st.subheader("📌 Collected Student Responses")
+    for i, resp in enumerate(st.session_state.responses, 1):
+        st.write(f"{i}. {resp}")
 
+# Summarization & feedback
+if st.button("Summarize & Generate Feedback + Follow-ups"):
+    all_responses = "\n".join(
+        [f"{i+1}. {resp}" for i, resp in enumerate(st.session_state.responses)]
+    )
 
-# === Step 2: Collect Responses ===
-elif st.session_state.phase == "collect":
-    st.write("### Student Responses")
-    response = st.text_input("Enter your response here:")
+    prompt = f"""
+    You are an accounting professor’s teaching assistant.
 
-    if st.button("Submit Response") and response:
-        st.session_state.student_responses.append(response)
-        st.success("Your response has been recorded!")
+    Here are the student responses to an earnings announcement case discussion:
 
-    if st.button("Summarize Class Responses"):
-        st.session_state.phase = "summary"
-        st.rerun()
+    {all_responses}
 
+    Please provide:
+    1. **Individual feedback**: Write a brief (1–2 sentences) personalized feedback note for each student response, numbered to match.
+    2. **Class summary**: Identify common themes, agreements, or differences across responses.
+    3. **Follow-up questions**: Pose 2–3 thoughtful discussion questions that help deepen understanding.
+    """
 
-# === Step 3: Summarize Responses ===
-elif st.session_state.phase == "summary":
-    st.write("### Summary of Student Responses")
-
-    if st.session_state.student_responses:
-        # Combine responses into one text block
-        combined = "\n".join(st.session_state.student_responses)
-
-        # Send to OpenAI for summarization
-        summary = client.chat.completions.create(
+    try:
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a teaching assistant summarizing class responses."},
-                {"role": "user", "content": f"Summarize these student responses:\n{combined}"}
+                {"role": "system", "content": "You are a helpful teaching assistant."},
+                {"role": "user", "content": prompt}
             ]
         )
-        summary_text = summary.choices[0].message.content
-        st.write(summary_text)
+        result = response.choices[0].message.content
 
-        st.session_state.summary = summary_text
+        st.subheader("📖 Bot Feedback & Follow-ups")
+        st.write(result)
 
-        if st.button("Pose Follow-Up Question"):
-            st.session_state.phase = "followup"
-            st.rerun()
-    else:
-        st.warning("No responses yet. Go back and collect responses first.")
-
-
-# === Step 4: Follow-Up Question ===
-elif st.session_state.phase == "followup":
-    st.write("### Follow-Up Question")
-
-    followup = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are a teaching assistant helping students think critically."},
-            {"role": "user", "content": f"Based on this summary, ask one follow-up question to deepen discussion:\n{st.session_state.summary}"}
-        ]
-    )
-    followup_q = followup.choices[0].message.content
-    st.write(f"**Bot asks:** {followup_q}")
-
-    if st.button("Restart Discussion"):
-        st.session_state.phase = "question"
-        st.session_state.student_responses = []
-        st.rerun()
+    except Exception as e:
+        st.error(f"Error: {e}")
 
