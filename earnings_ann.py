@@ -1,25 +1,23 @@
 import streamlit as st
-from google import genai
 import os
+from google import genai
 import math
 
-# --- Load API key from environment variable ---
+# Ensure API key is set
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
     st.error("❌ GOOGLE_API_KEY environment variable not set.")
     st.stop()
 
-# Initialize the GenAI client
+# Initialize the client
 client = genai.Client()
-
 
 st.title("📊 Earnings Announcement Classroom Bot (Gemini)")
 
-# --- Store student responses ---
+# Store responses
 if "responses" not in st.session_state:
     st.session_state.responses = []
 
-# --- Student input ---
 student_input = st.text_area("💬 Enter your response:")
 
 if st.button("Submit Response"):
@@ -29,19 +27,13 @@ if st.button("Submit Response"):
     else:
         st.warning("Please enter a response.")
 
-# --- Show collected responses ---
-if st.session_state.responses:
-    st.subheader("Collected Student Responses")
-    for i, resp in enumerate(st.session_state.responses, 1):
-        st.write(f"{i}. {resp}")
-
-# --- Summarize & feedback with batching ---
+# Summarize & feedback
 if st.button("Summarize & Generate Feedback + Follow-ups"):
     responses = st.session_state.responses
     if not responses:
         st.warning("No responses yet!")
     else:
-        batch_size = 20  # number of student responses per batch
+        batch_size = 20
         num_batches = math.ceil(len(responses) / batch_size)
         batch_summaries = []
 
@@ -63,8 +55,9 @@ Keep the response concise.
 """
 
             try:
-                response = model.generate(
-                    prompt=prompt,
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
                     temperature=0.7,
                     max_output_tokens=300
                 )
@@ -74,7 +67,7 @@ Keep the response concise.
                 st.error(f"Error in batch {i+1}: {e}")
                 continue
 
-        # --- Combine batch summaries into final class summary ---
+        # Combine batch summaries
         combined_summaries = "\n".join(batch_summaries)
         final_prompt = f"""
 You are a teaching assistant.
@@ -90,8 +83,9 @@ Keep concise.
 """
 
         try:
-            final_response = model.generate(
-                prompt=final_prompt,
+            final_response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=final_prompt,
                 temperature=0.7,
                 max_output_tokens=400
             )
