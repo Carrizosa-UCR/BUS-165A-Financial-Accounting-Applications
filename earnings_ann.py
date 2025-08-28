@@ -58,10 +58,6 @@ Keep the response concise.
                 response = client.models.generate_content(
                     model="gemini-2.5-flash",
                     contents=prompt,
-                    text_generation_params={
-                        "temperature": 0.7,
-                        "max_output_tokens": 300
-                    }
                 )
                 batch_summaries.append(response.text)
 
