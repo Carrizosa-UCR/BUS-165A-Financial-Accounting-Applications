@@ -130,4 +130,3 @@ Please provide:
             st.session_state.dialogue = []
             st.session_state.intro_done = False
             st.success("Class session has been reset. Students will see the highlights again at the start.")
-
