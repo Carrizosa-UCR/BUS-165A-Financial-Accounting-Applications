@@ -25,7 +25,7 @@ if "messages" not in st.session_state:
 if "topic" not in st.session_state:
     st.session_state.topic = None
 
-st.title("📊 Financial Accounting Information Dialogue Bot")
+st.title("BUS 165A: Financial Accounting Information and Applications")
 
 # Topic selection
 if st.session_state.topic is None:
