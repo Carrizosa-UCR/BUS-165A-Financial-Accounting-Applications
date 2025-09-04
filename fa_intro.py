@@ -48,7 +48,7 @@ else:
     st.markdown(
         f"""
         <div style="
-            padding:20px; 
+            padding:10px; 
             border-radius:12px; 
             background-color:#ffffff;  /* white background */
             border: 2px solid #4CAF50;  /* green border */
@@ -56,7 +56,7 @@ else:
             box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
             margin-bottom:20px;
         ">
-            <h3 style="margin:0; color:#4CAF50;">📌 Topic: {st.session_state.topic}</h3>
+            <h4 style="margin:0; color:#4CAF50;">📌 Topic: {st.session_state.topic}</h4>
             <p style="margin:5px 0 0 0;">{topic_descriptions[st.session_state.topic]}</p>
         </div>
         """,
