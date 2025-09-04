@@ -13,8 +13,6 @@ topic_descriptions = {
         "Earnings announcements provide updates on company performance. Investors and analysts closely watch them, often causing stock price reactions.",
     "The use and function of financial accounting ratios in corporate loan covenants":
         "Loan covenants often rely on accounting ratios like debt-to-equity or interest coverage to monitor borrower risk and protect lenders.",
-    "The use and role of financial accounting information in earnout clauses used in mergers and acquisitions":
-        "In M&A deals, earnout clauses tie part of the purchase price to future performance, requiring reliable accounting measures to calculate payouts.",
     "The use of financial accounting information in executive compensation pay packages":
         "Executive pay packages often link bonuses or stock awards to accounting metrics like earnings per share, aligning management incentives with performance."
 }
