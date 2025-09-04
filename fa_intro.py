@@ -67,8 +67,8 @@ else:
 
         # Generate bot reply
         response = model.generate_content(
-            f"Continue a guided teaching dialogue on the topic: {st.session_state.topic}. "
-            f"Student said: {prompt}. Respond as a teaching assistant who explains concepts and asks follow-up questions. Be clear, concise, and do not ask more than one question per response."
+            f"Continue a guided teaching dialogue on the topic and assume the student has no prior knowledge of the topic: {st.session_state.topic}. "
+            f"Student said: {prompt}. Respond as a teaching assistant who acknowledges responses, explains concepts, corrects inaccuracies, and asks follow-up questions. Be clear, concise, and do not ask more than one question per response."
         )
 
         reply = response.text
