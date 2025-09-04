@@ -25,15 +25,7 @@ if "messages" not in st.session_state:
 if "topic" not in st.session_state:
     st.session_state.topic = None
 
-st.markdown("""
-<style>
-.stTitle {
-    font-size: 10px !important; /* Adjust the desired font size */
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.title("BUS 165A: Financial Accounting Information and Applications")
+st.subtitle("BUS 165A: Financial Accounting Information and Applications")
 
 # Topic selection
 if st.session_state.topic is None:
