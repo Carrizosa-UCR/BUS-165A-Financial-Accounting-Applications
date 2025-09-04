@@ -73,13 +73,12 @@ else:
         st.session_state.messages.append({"role": "bot", "text": reply})
         st.rerun()
 
-# Export discussion
-if len(st.session_state.messages) > 0:
+    # Export discussion
     st.download_button(
         label="Download Chat (CSV)",
         data=pd.DataFrame(st.session_state.messages).to_csv(index=False),
         file_name="165A_discussion.csv",
         mime="text/csv"
-    )
+        )
     
 
