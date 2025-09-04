@@ -78,14 +78,8 @@ if len(st.session_state.messages) > 0:
     st.download_button(
         label="Download Chat (CSV)",
         data=pd.DataFrame(st.session_state.messages).to_csv(index=False),
-        file_name="class_discussion.csv",
+        file_name="165A_discussion.csv",
         mime="text/csv"
     )
-    st.download_button(
-        label="Download Chat (JSON)",
-        data=pd.DataFrame(st.session_state.messages).to_json(orient="records", indent=2),
-        file_name="class_discussion.json",
-        mime="application/json"
-    )
-
+    
 
