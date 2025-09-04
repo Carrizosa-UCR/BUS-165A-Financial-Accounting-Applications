@@ -48,8 +48,7 @@ elif st.session_state.show_description:
         # Kick off guided dialogue
         st.session_state.messages.append({
             "role": "bot",
-            "text": f"Let's dive deeper into **{st.session_state.topic}**. Do you know what specific financial accounting measures are relevant to this topic?
-            If so, provide one."
+            "text": f"Let's dive deeper into **{st.session_state.topic}**. Do you know what specific financial accounting measures are relevant to this topic? If so, provide one."
         })
         st.rerun()
 
@@ -69,8 +68,7 @@ else:
         # Generate bot reply
         response = model.generate_content(
             f"Continue a guided teaching dialogue on the topic: {st.session_state.topic}. "
-            f"Student said: {prompt}. Respond as a teaching assistant who explains concepts and asks follow-up questions. Be clear, concise, and do not ask more
-            than one question per response."
+            f"Student said: {prompt}. Respond as a teaching assistant who explains concepts and asks follow-up questions. Be clear, concise, and do not ask more than one question per response."
         )
 
         reply = response.text
