@@ -1,5 +1,8 @@
 import streamlit as st
 import os
+import json
+import csv
+import io
 from google import genai
 
 # --- Load API key ---
@@ -11,99 +14,119 @@ if not api_key:
 # Initialize Gemini client
 client = genai.Client()
 
-st.title("📊 Classroom Dialogue Bot: Understanding Earnings Announcements")
+st.title("📊 Classroom Dialogue Bot: Exploring Financial Accounting Information")
 
-# --- NVIDIA Q2 2025 Highlights (used as applied example) ---
-financial_highlights = """
-📌 NVIDIA Q2 2025 Financial Highlights:
-- Revenue: $46.7B, up 56% YoY
-- Net Income: $26.4B
-- EPS: GAAP $1.08, Non-GAAP $1.05
-- Data Center Revenue: $41.1B, up 56% YoY
-- Gross Margin: GAAP 72.4%, Non-GAAP 72.7%
-- Stock fell ~3% after hours due to lower-than-expected data center sales and China uncertainty
-- CEO emphasized AI infrastructure growth and Blackwell platform potential
-"""
+# --- Topic options ---
+topics = {
+    "a": "Earnings announcements and the stock market's and analysts' responses",
+    "b": "The use and function of financial accounting ratios in corporate loan covenants",
+    "c": "The use and role of financial accounting information in earnout clauses in mergers and acquisitions",
+    "d": "The use of financial accounting information in executive compensation pay packages"
+}
 
-if "intro_done" not in st.session_state:
-    st.subheader("💼 NVIDIA Q2 2025 Example")
-    st.text(financial_highlights)
-    st.session_state.intro_done = True
-
-# Store conversation
+# Store state
+if "topic" not in st.session_state:
+    st.session_state.topic = None
 if "dialogue" not in st.session_state:
     st.session_state.dialogue = []
 
-# Track teaching stage (1, 2, 3)
-if "stage" not in st.session_state:
-    st.session_state.stage = 1
+# --- Step 1: Topic Selection ---
+if not st.session_state.topic:
+    st.subheader("Step 1: Choose a Topic")
+    choice = st.selectbox(
+        "Select one area to explore:",
+        options=list(topics.keys()),
+        format_func=lambda x: f"{x}) {topics[x]}"
+    )
 
-# --- Stage prompts ---
-stage_prompts = {
-    1: "We are teaching about the information environment and the role of earnings announcements. Guide students in understanding why firms release earnings, how it informs investors, and how the example of NVIDIA Q2 2025 fits in.",
-    2: "We are teaching about how the market develops expectations regarding financial performance and the market response to earnings. Use the NVIDIA Q2 2025 reaction (stock fell despite strong revenue growth) as an example.",
-    3: "We are teaching about the role of management guidance and analysts in shaping market expectations. Guide students to reflect on how analyst forecasts and management commentary influence stock price reactions."
-}
+    if st.button("Confirm Topic"):
+        st.session_state.topic = choice
+        st.session_state.dialogue = []
+        st.success(f"You chose: {topics[choice]}")
 
-# --- First bot question ---
-if not st.session_state.dialogue:
-    st.session_state.dialogue.append({
-        "role": "bot",
-        "text": "Let’s start with the basics: Why do you think companies release earnings announcements, and who benefits from this information?"
-    })
+# --- Step 2: Dialogue ---
+if st.session_state.topic:
+    st.subheader(f"🗣️ Topic: {topics[st.session_state.topic]}")
 
-# --- Display conversation ---
-st.subheader("🗣️ Class Discussion")
-for turn in st.session_state.dialogue:
-    if turn["role"] == "bot":
-        st.markdown(f"**Bot:** {turn['text']}")
-    else:
-        st.markdown(f"**Student:** {turn['text']}")
+    # First bot question
+    if not st.session_state.dialogue:
+        st.session_state.dialogue.append({
+            "role": "bot",
+            "text": f"Let’s dive into **{topics[st.session_state.topic]}**. To start: Why do you think this area of financial accounting is important to decision-makers?"
+        })
 
-# --- Student input ---
-student_input = st.text_area("Your response:", key="student_input")
+    # Display conversation
+    for turn in st.session_state.dialogue:
+        if turn["role"] == "bot":
+            st.markdown(f"**Bot:** {turn['text']}")
+        else:
+            st.markdown(f"**Student:** {turn['text']}")
 
-if st.button("Submit Response"):
-    if student_input.strip():
-        # Save student response
-        st.session_state.dialogue.append({"role": "student", "text": student_input.strip()})
+    # Student input
+    student_input = st.text_area("Your response:", key="student_input")
 
-        # Build teaching-aware prompt
-        prompt = f"""
-You are guiding a class discussion about earnings announcements.
-The teaching module has three stages:
-1) Information environment & role of earnings announcements,
-2) Market expectations & reactions,
-3) Role of management guidance & analysts.
+    if st.button("Submit Response"):
+        if student_input.strip():
+            # Save student response
+            st.session_state.dialogue.append({"role": "student", "text": student_input.strip()})
 
-We are currently in Stage {st.session_state.stage}.
-Stage goal: {stage_prompts[st.session_state.stage]}
+            # Prompt Gemini for guided dialogue
+            prompt = f"""
+You are teaching about: {topics[st.session_state.topic]}.
 
-Applied example (NVIDIA Q2 2025):
-{financial_highlights}
-
-Conversation so far:
+Here is the ongoing conversation:
 {st.session_state.dialogue}
 
-Respond as the teaching assistant:
+Now, as the teaching assistant:
 1. Acknowledge the student's latest response.
-2. Ask ONE thoughtful follow-up question aligned with the current stage.
-3. Keep your tone warm, curious, and guiding.
-Do not summarize or jump ahead to the next stage until the instructor triggers it.
+2. Provide a brief piece of teaching information related to this topic.
+3. Ask ONE thoughtful follow-up question to deepen understanding.
+Keep tone warm and guiding.
 """
 
-        try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            bot_reply = response.text.strip()
-            st.session_state.dialogue.append({"role": "bot", "text": bot_reply})
+            try:
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt
+                )
+                bot_reply = response.text.strip()
+                st.session_state.dialogue.append({"role": "bot", "text": bot_reply})
 
-        except Exception as e:
-            st.error(f"Bot error: {e}")
-    else:
-        st.warning("Please enter a response.")
+            except Exception as e:
+                st.error(f"Bot error: {e}")
+        else:
+            st.warning("Please enter a response.")
+
+    # --- Download chat option ---
+    if st.session_state.dialogue:
+        chat_data = {
+            "topic": topics[st.session_state.topic],
+            "dialogue": st.session_state.dialogue
+        }
+
+        # JSON export
+        chat_json = json.dumps(chat_data, indent=2)
+        st.download_button(
+            label="📥 Download Chat (JSON)",
+            data=chat_json,
+            file_name="class_discussion.json",
+            mime="application/json"
+        )
+
+        # CSV export
+        csv_buffer = io.StringIO()
+        writer = csv.writer(csv_buffer)
+        writer.writerow(["Topic", "Role", "Text"])
+        for d in st.session_state.dialogue:
+            writer.writerow([topics[st.session_state.topic], d["role"], d["text"]])
+        csv_data = csv_buffer.getvalue()
+
+        st.download_button(
+            label="📊 Download Chat (CSV)",
+            data=csv_data,
+            file_name="class_discussion.csv",
+            mime="text/csv"
+        )
 
 # --- Instructor controls ---
 st.markdown("---")
@@ -111,34 +134,23 @@ st.subheader("🔐 Instructor Controls")
 pw = st.text_input("Enter instructor password:", type="password")
 
 if pw == "summarize123":  # <-- change this password
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("➡️ Next Stage"):
-            if st.session_state.stage < 3:
-                st.session_state.stage += 1
-                st.success(f"Moved to Stage {st.session_state.stage}.")
-            else:
-                st.info("Already at the final stage.")
-
-    with col2:
         if st.button("📖 Generate Final Class Summary"):
             all_text = "\n".join([f"{d['role'].capitalize()}: {d['text']}" for d in st.session_state.dialogue])
 
             summary_prompt = f"""
-You are summarizing a class discussion on earnings announcements.
-Stages covered:
-1) Information environment & role of earnings announcements,
-2) Market expectations & reactions,
-3) Role of management guidance & analysts.
+You are summarizing a class discussion on the topic:
+{topics.get(st.session_state.topic, "No topic chosen")}.
 
 Here is the entire dialogue:
 {all_text}
 
 Please provide:
-1. A clear summary of each stage of the discussion.
-2. The main insights and student takeaways.
-3. One final reflection question that ties everything together.
+1. A clear summary of what was discussed.
+2. The main insights and takeaways.
+3. One final reflection question for the class.
 """
 
             try:
@@ -152,9 +164,9 @@ Please provide:
             except Exception as e:
                 st.error(f"Summary error: {e}")
 
-    with col3:
+    with col2:
         if st.button("🔄 Reset Class Session"):
+            st.session_state.topic = None
             st.session_state.dialogue = []
-            st.session_state.intro_done = False
-            st.session_state.stage = 1
             st.success("Class session has been reset.")
+
