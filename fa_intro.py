@@ -37,7 +37,7 @@ if st.session_state.topic is None:
         # First teaching question
         st.session_state.messages.append({
             "role": "bot",
-            "text": f"Let's dive deeper into **{topic}**. Do you know any specific financial accounting measures are relevant to this topic? If so, provide one."
+            "text": f"Let's dive deeper into **{topic}**. Start this dialogue by entering a basic question regarding the topic below."
         })
         st.rerun()
 
