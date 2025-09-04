@@ -24,8 +24,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "topic" not in st.session_state:
     st.session_state.topic = None
-if "show_description" not in st.session_state:
-    st.session_state.show_description = False
 
 st.title("📊 Financial Accounting Information Dialogue Bot")
 
@@ -35,26 +33,26 @@ if st.session_state.topic is None:
     topic = st.radio("Topics:", list(topic_descriptions.keys()))
     if st.button("Start Discussion"):
         st.session_state.topic = topic
-        st.session_state.show_description = True
-        st.session_state.messages.append({"role": "bot", "text": f"You selected: **{topic}**"})
-        st.rerun()
 
-# Show topic description before dialogue
-elif st.session_state.show_description:
-    description = topic_descriptions[st.session_state.topic]
-    st.info(f"**Brief overview:** {description}")
-    if st.button("Continue to Dialogue"):
-        st.session_state.show_description = False
-        # Kick off guided dialogue
+        # First teaching question
         st.session_state.messages.append({
             "role": "bot",
-            "text": f"Let's dive deeper into **{st.session_state.topic}**. Do you know what specific financial accounting measures are relevant to this topic? If so, provide one."
+            "text": f"Let's dive deeper into **{topic}**. Do you know any specific financial accounting measures are relevant to this topic? If so, provide one."
         })
         st.rerun()
 
 # Dialogue mode
 else:
-    st.subheader(f"Topic: {st.session_state.topic}")
+    # Always show pinned header card with topic + description
+    st.markdown(
+        f"""
+        <div style="padding:15px; border-radius:12px; background-color:#f0f2f6; margin-bottom:20px;">
+            <h3 style="margin:0;">📌 Topic: {st.session_state.topic}</h3>
+            <p style="margin:5px 0 0 0; color:#444;">{topic_descriptions[st.session_state.topic]}</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # Display chat history
     for msg in st.session_state.messages:
