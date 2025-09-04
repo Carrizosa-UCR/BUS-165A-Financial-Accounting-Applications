@@ -44,11 +44,20 @@ if st.session_state.topic is None:
 # Dialogue mode
 else:
     # Always show pinned header card with topic + description
+    # Pinned header card with custom formatting
     st.markdown(
         f"""
-        <div style="padding:15px; border-radius:12px; background-color:#f0f2f6; margin-bottom:20px;">
-            <h3 style="margin:0;">📌 Topic: {st.session_state.topic}</h3>
-            <p style="margin:5px 0 0 0; color:#444;">{topic_descriptions[st.session_state.topic]}</p>
+        <div style="
+            padding:20px; 
+            border-radius:12px; 
+            background-color:#ffffff;  /* white background */
+            border: 2px solid #4CAF50;  /* green border */
+            color:#000000;  /* black text */
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+            margin-bottom:20px;
+        ">
+            <h3 style="margin:0; color:#4CAF50;">📌 Topic: {st.session_state.topic}</h3>
+            <p style="margin:5px 0 0 0;">{topic_descriptions[st.session_state.topic]}</p>
         </div>
         """,
         unsafe_allow_html=True
