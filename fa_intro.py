@@ -5,7 +5,7 @@ import pandas as pd
 
 # Configure Gemini
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.5-pro")
 
 # Define topics and short descriptions
 topic_descriptions = {
