@@ -1,172 +1,93 @@
 import streamlit as st
+import google.generativeai as genai
 import os
-import json
-import csv
-import io
-from google import genai
+import pandas as pd
 
-# --- Load API key ---
-api_key = os.getenv("GOOGLE_API_KEY")
-if not api_key:
-    st.error("❌ GOOGLE_API_KEY environment variable not set.")
-    st.stop()
+# Configure Gemini
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
-# Initialize Gemini client
-client = genai.Client()
-
-st.title("📊 Classroom Dialogue Bot: Exploring Financial Accounting Information")
-
-# --- Topic options ---
-topics = {
-    "a": "Earnings announcements and the stock market's and analysts' responses",
-    "b": "The use and function of financial accounting ratios in corporate loan covenants",
-    "c": "The use and role of financial accounting information in earnout clauses in mergers and acquisitions",
-    "d": "The use of financial accounting information in executive compensation pay packages"
+# Define topics and short descriptions
+topic_descriptions = {
+    "Earnings announcements and the stock market's and analysts' responses":
+        "Earnings announcements provide updates on company performance. Investors and analysts closely watch them, often causing stock price reactions.",
+    "The use and function of financial accounting ratios in corporate loan covenants":
+        "Loan covenants often rely on accounting ratios like debt-to-equity or interest coverage to monitor borrower risk and protect lenders.",
+    "The use and role of financial accounting information in earnout clauses used in mergers and acquisitions":
+        "In M&A deals, earnout clauses tie part of the purchase price to future performance, requiring reliable accounting measures to calculate payouts.",
+    "The use of financial accounting information in executive compensation pay packages":
+        "Executive pay packages often link bonuses or stock awards to accounting metrics like earnings per share, aligning management incentives with performance."
 }
 
-# Store state
+# Initialize session state
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 if "topic" not in st.session_state:
     st.session_state.topic = None
-if "dialogue" not in st.session_state:
-    st.session_state.dialogue = []
+if "show_description" not in st.session_state:
+    st.session_state.show_description = False
 
-# --- Step 1: Topic Selection ---
-if not st.session_state.topic:
-    st.subheader("Step 1: Choose a Topic")
-    choice = st.selectbox(
-        "Select one area to explore:",
-        options=list(topics.keys()),
-        format_func=lambda x: f"{x}) {topics[x]}"
+st.title("📊 Financial Accounting Information Dialogue Bot")
+
+# Topic selection
+if st.session_state.topic is None:
+    st.subheader("Choose a topic to explore:")
+    topic = st.radio("Topics:", list(topic_descriptions.keys()))
+    if st.button("Start Discussion"):
+        st.session_state.topic = topic
+        st.session_state.show_description = True
+        st.session_state.messages.append({"role": "bot", "text": f"You selected: **{topic}**"})
+        st.rerun()
+
+# Show topic description before dialogue
+elif st.session_state.show_description:
+    description = topic_descriptions[st.session_state.topic]
+    st.info(f"**Brief overview:** {description}")
+    if st.button("Continue to Dialogue"):
+        st.session_state.show_description = False
+        # Kick off guided dialogue
+        st.session_state.messages.append({
+            "role": "bot",
+            "text": f"Let's dive deeper into **{st.session_state.topic}**. What do you think makes this topic important in financial accounting?"
+        })
+        st.rerun()
+
+# Dialogue mode
+else:
+    st.subheader(f"Topic: {st.session_state.topic}")
+
+    # Display chat history
+    for msg in st.session_state.messages:
+        with st.chat_message("assistant" if msg["role"] == "bot" else "user"):
+            st.markdown(msg["text"])
+
+    # User input
+    if prompt := st.chat_input("Your response:"):
+        st.session_state.messages.append({"role": "user", "text": prompt})
+
+        # Generate bot reply
+        response = model.generate_content(
+            f"Continue a guided teaching dialogue on the topic: {st.session_state.topic}. "
+            f"Student said: {prompt}. Respond as a teaching assistant who explains concepts and asks follow-up questions."
+        )
+
+        reply = response.text
+        st.session_state.messages.append({"role": "bot", "text": reply})
+        st.rerun()
+
+# Export discussion
+if len(st.session_state.messages) > 0:
+    st.download_button(
+        label="Download Chat (CSV)",
+        data=pd.DataFrame(st.session_state.messages).to_csv(index=False),
+        file_name="class_discussion.csv",
+        mime="text/csv"
+    )
+    st.download_button(
+        label="Download Chat (JSON)",
+        data=pd.DataFrame(st.session_state.messages).to_json(orient="records", indent=2),
+        file_name="class_discussion.json",
+        mime="application/json"
     )
 
-    if st.button("Confirm Topic"):
-        st.session_state.topic = choice
-        st.session_state.dialogue = []
-        st.success(f"You chose: {topics[choice]}")
-
-# --- Step 2: Dialogue ---
-if st.session_state.topic:
-    st.subheader(f"🗣️ Topic: {topics[st.session_state.topic]}")
-
-    # First bot question
-    if not st.session_state.dialogue:
-        st.session_state.dialogue.append({
-            "role": "bot",
-            "text": f"Let’s dive into **{topics[st.session_state.topic]}**. To start: Why do you think this area of financial accounting is important to decision-makers?"
-        })
-
-    # Display conversation
-    for turn in st.session_state.dialogue:
-        if turn["role"] == "bot":
-            st.markdown(f"**Bot:** {turn['text']}")
-        else:
-            st.markdown(f"**Student:** {turn['text']}")
-
-    # Student input
-    student_input = st.text_area("Your response:", key="student_input")
-
-    if st.button("Submit Response"):
-        if student_input.strip():
-            # Save student response
-            st.session_state.dialogue.append({"role": "student", "text": student_input.strip()})
-
-            # Prompt Gemini for guided dialogue
-            prompt = f"""
-You are teaching about: {topics[st.session_state.topic]}.
-
-Here is the ongoing conversation:
-{st.session_state.dialogue}
-
-Now, as the teaching assistant:
-1. Acknowledge the student's latest response.
-2. Provide a brief piece of teaching information related to this topic.
-3. Ask ONE thoughtful follow-up question to deepen understanding.
-Keep tone warm and guiding.
-"""
-
-            try:
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt
-                )
-                bot_reply = response.text.strip()
-                st.session_state.dialogue.append({"role": "bot", "text": bot_reply})
-
-            except Exception as e:
-                st.error(f"Bot error: {e}")
-        else:
-            st.warning("Please enter a response.")
-
-    # --- Download chat option ---
-    if st.session_state.dialogue:
-        chat_data = {
-            "topic": topics[st.session_state.topic],
-            "dialogue": st.session_state.dialogue
-        }
-
-        # JSON export
-        chat_json = json.dumps(chat_data, indent=2)
-        st.download_button(
-            label="📥 Download Chat (JSON)",
-            data=chat_json,
-            file_name="class_discussion.json",
-            mime="application/json"
-        )
-
-        # CSV export
-        csv_buffer = io.StringIO()
-        writer = csv.writer(csv_buffer)
-        writer.writerow(["Topic", "Role", "Text"])
-        for d in st.session_state.dialogue:
-            writer.writerow([topics[st.session_state.topic], d["role"], d["text"]])
-        csv_data = csv_buffer.getvalue()
-
-        st.download_button(
-            label="📊 Download Chat (CSV)",
-            data=csv_data,
-            file_name="class_discussion.csv",
-            mime="text/csv"
-        )
-
-# --- Instructor controls ---
-st.markdown("---")
-st.subheader("🔐 Instructor Controls")
-pw = st.text_input("Enter instructor password:", type="password")
-
-if pw == "summarize123":  # <-- change this password
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button("📖 Generate Final Class Summary"):
-            all_text = "\n".join([f"{d['role'].capitalize()}: {d['text']}" for d in st.session_state.dialogue])
-
-            summary_prompt = f"""
-You are summarizing a class discussion on the topic:
-{topics.get(st.session_state.topic, "No topic chosen")}.
-
-Here is the entire dialogue:
-{all_text}
-
-Please provide:
-1. A clear summary of what was discussed.
-2. The main insights and takeaways.
-3. One final reflection question for the class.
-"""
-
-            try:
-                summary = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=summary_prompt
-                )
-                st.subheader("📖 Final Class Summary")
-                st.write(summary.text)
-
-            except Exception as e:
-                st.error(f"Summary error: {e}")
-
-    with col2:
-        if st.button("🔄 Reset Class Session"):
-            st.session_state.topic = None
-            st.session_state.dialogue = []
-            st.success("Class session has been reset.")
 
