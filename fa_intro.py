@@ -28,7 +28,7 @@ if "topic" not in st.session_state:
 st.markdown("""
 <style>
 .stTitle {
-    font-size: 15px !important; /* Adjust the desired font size */
+    font-size: 10px !important; /* Adjust the desired font size */
 }
 </style>
 """, unsafe_allow_html=True)
