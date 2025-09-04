@@ -26,78 +26,11 @@ This project is an interactive **Streamlit chatbot** that guides students throug
   - Reset the session  
 
 ---
-
-## 🛠️ Installation (For Instructors / Developers)  
-
-1. Clone this repository:  
-
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/YOUR-REPO.git
-   cd YOUR-REPO
-   ```
-
-2. Create and activate a virtual environment (optional but recommended):  
-
-   ```bash
-   python -m venv venv
-   source venv/bin/activate   # macOS/Linux
-   venv\Scripts\activate      # Windows
-   ```
-
-3. Install dependencies:  
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
----
-
-## 🔑 API Key Setup  
-
-This project requires a **Google AI Studio API Key** for Gemini.  
-
-1. Go to [Google AI Studio](https://aistudio.google.com).  
-2. Generate an API key.  
-3. Add it as an environment variable:  
-
-   **Mac/Linux**  
-   ```bash
-   export GOOGLE_API_KEY="your_api_key_here"
-   ```  
-
-   **Windows (PowerShell)**  
-   ```powershell
-   setx GOOGLE_API_KEY "your_api_key_here"
-   ```  
-
-   On **GitHub Codespaces/Actions/Streamlit Cloud**, add the key to **Secrets** as `GOOGLE_API_KEY`.  
-
----
-
-## ▶️ Run the App  
-
-```bash
-streamlit run earnings_ann.py
-```
-
-Open the link shown in your terminal (default: http://localhost:8501).  
-
----
-
-## 👩‍🏫 Instructor Controls  
-
-- Instructor-only features are **password protected** (default: `summarize123`).  
-- Once entered, the instructor can:  
-  - Generate a **final summary** of the class discussion  
-  - Reset the class session for the next group  
-
----
-
 ## 📂 File Structure  
 
 ```
 .
-├── earnings_ann.py     # Main Streamlit app
+├── fa_intro.py         # Main Streamlit app
 ├── requirements.txt    # Python dependencies
 ├── README.md           # Project documentation
 ```
@@ -116,13 +49,6 @@ Example CSV output:
 |-------|---------|------|
 | Earnings announcements… | Bot     | Let’s dive into earnings announcements… |
 | Earnings announcements… | Student | Because investors care about earnings performance. |
-
----
-
-## 📌 Notes  
-
-- Change the instructor password in `earnings_ann.py` for security.  
-- The dialogue flow is **guided but adaptive** — Gemini tailors responses based on student input.  
 
 ---
 
